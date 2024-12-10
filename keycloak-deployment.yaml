@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.0.2
+          ports:
+            - containerPort: 8080
+          env:
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              value: "admin"
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              value: "admin"
+            - name: DB_VENDOR
+              value: "postgres"
+            - name: DB_ADDR
+              value: "postgresql:5432"
+            - name: DB_DATABASE
+              value: "keycloak"
+            - name: DB_USER
+              value: "keycloak_user"
+            - name: DB_PASSWORD
+              value: "keycloak_pw"
+          args:
+            - "start-dev"
+            - "--http-port=8080"
+            - "--http-host=0.0.0.0"
+            - "--spi-cookie-same-site-attribute=none"
+            - "--spi-hostname-strict=false"
+            - "--spi-hostname-strict-backchannel=false"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+spec:
+  selector:
+    app: keycloak
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
