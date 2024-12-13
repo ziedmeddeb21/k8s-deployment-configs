@@ -20,14 +20,16 @@ spec:
           ports:
             - containerPort: 27017
           env:
-            - name: MONGO_INITDB_DATABASE
-              value: "test_db"
-          volumeMounts:
-            - name: mongodb-data
-              mountPath: /data/db
-  volumes:
-    - name: mongodb-data
-      emptyDir: {}
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key:  mongo-user
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key:  mongo-password
 ---
 apiVersion: v1
 kind: Service
@@ -40,4 +42,3 @@ spec:
     - protocol: TCP
       port: 27017
       targetPort: 27017
-  type: ClusterIP

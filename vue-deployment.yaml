@@ -5,7 +5,7 @@ metadata:
   labels:
     app: front-vue
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: front-vue
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: front-vue
-          image: ziedmeddeb123/front-vue:v1.0
+          image: ziedmeddeb123/front-vue:v1.1
           ports:
             - containerPort: 5173
 
@@ -27,11 +27,13 @@ kind: Service
 metadata:
   name: vue-service
 spec:
-  type: NodePort
+  type: LoadBalancer
   selector:
-    app.kubernetes.io/name: front-vue
+    app: front-vue
   ports:
     - protocol: TCP
       port: 5173
       targetPort: 5173
-      nodePort: 30001
+      nodePort: 30100
+
+

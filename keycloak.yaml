@@ -21,19 +21,29 @@ spec:
             - containerPort: 8080
           env:
             - name: KC_BOOTSTRAP_ADMIN_USERNAME
-              value: "admin"
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-secret
+                  key: keycloak-username
             - name: KC_BOOTSTRAP_ADMIN_PASSWORD
-              value: "admin"
-            - name: DB_VENDOR
-              value: "postgres"
-            - name: DB_ADDR
-              value: "postgresql:5432"
-            - name: DB_DATABASE
-              value: "keycloak"
-            - name: DB_USER
-              value: "keycloak_user"
-            - name: DB_PASSWORD
-              value: "keycloak_pw"
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-secret
+                  key: keycloak-password
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL
+              value: "jdbc:postgresql://postgres-keycloak:5432/keycloak"
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-username
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-password
           args:
             - "start-dev"
             - "--http-port=8080"
@@ -53,4 +63,4 @@ spec:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-  type: ClusterIP
+  type: NodePort
