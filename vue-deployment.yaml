@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vue-deployment
+  labels:
+    app: front-vue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: front-vue
+  template:
+    metadata:
+      labels:
+        app: front-vue
+    spec:
+      containers:
+        - name: front-vue
+          image: ziedmeddeb123/front-vue:v1.32
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vue-service
+spec:
+  selector:
+    app: front-vue
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

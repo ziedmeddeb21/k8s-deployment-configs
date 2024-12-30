@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.0.2
+          ports:
+            - containerPort: 8443
+          env:
+            # Admin credentials
+            - name: KC_BOOTSTRAP_ADMIN_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-secret
+                  key: keycloak-username
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-secret
+                  key: keycloak-password
+
+            # Database configuration
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL
+              value: "jdbc:postgresql://postgres-keycloak:5432/keycloak"
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-username
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-password
+
+            # Hostname configuration
+            - name: KC_HOSTNAME
+              value: "https://192.168.49.2:31559"
+            - name: KC_HOSTNAME_STRICT
+              value: "false"
+
+          args:
+            # Production mode and HTTPS configuration
+            - "start"
+            - "--https-port=8443"
+            - "--http-host=0.0.0.0"
+            - "--spi-cookie-same-site-attribute=none"
+            - "--spi-hostname-strict=false"
+            - "--spi-hostname-strict-backchannel=false"
+            - "--https-certificate-file=/opt/keycloak/conf/tls.crt"
+            - "--https-certificate-key-file=/opt/keycloak/conf/tls.key"
+
+          volumeMounts:
+            # Mount TLS certificates
+            - name: keycloak-tls
+              mountPath: /opt/keycloak/conf
+              readOnly: true
+
+      volumes:
+        # TLS secret volume
+        - name: keycloak-tls
+          secret:
+            secretName: keycloak-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+spec:
+  selector:
+    app: keycloak
+  ports:
+    - protocol: TCP
+      port: 8443
+      targetPort: 8443
+      nodePort: 31559
+  type: NodePort
